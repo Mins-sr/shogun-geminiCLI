@@ -181,46 +181,46 @@ else
 fi
 
 # ============================================================
-# STEP 4: Claude Code CLI チェック
+# STEP 4: Gemini CLI チェック
 # ============================================================
-log_step "STEP 4: Claude Code CLI チェック"
+log_step "STEP 4: Gemini CLI チェック"
 
-if command -v claude &> /dev/null; then
+if command -v gemini &> /dev/null; then
     # バージョン取得を試みる
-    CLAUDE_VERSION=$(claude --version 2>/dev/null || echo "unknown")
-    log_success "Claude Code CLI がインストール済みです"
-    log_info "バージョン: $CLAUDE_VERSION"
-    RESULTS+=("Claude Code CLI: OK")
+    GEMINI_VERSION=$(gemini --version 2>/dev/null || echo "unknown")
+    log_success "Gemini CLI がインストール済みです"
+    log_info "バージョン: $GEMINI_VERSION"
+    RESULTS+=("Gemini CLI: OK")
 else
-    log_warn "Claude Code CLI がインストールされていません"
+    log_warn "Gemini CLI がインストールされていません"
     echo ""
 
     if command -v npm &> /dev/null; then
         echo "  インストールコマンド:"
-        echo "     npm install -g @anthropic-ai/claude-code"
+        echo "     npm install -g @google/gemini-cli"
         echo ""
         read -p "  今すぐインストールしますか? [Y/n]: " REPLY
         REPLY=${REPLY:-Y}
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            log_info "Claude Code CLI をインストール中..."
-            npm install -g @anthropic-ai/claude-code
+            log_info "Gemini CLI をインストール中..."
+            npm install -g @google/gemini-cli
 
-            if command -v claude &> /dev/null; then
-                log_success "Claude Code CLI インストール完了"
-                RESULTS+=("Claude Code CLI: インストール完了")
+            if command -v gemini &> /dev/null; then
+                log_success "Gemini CLI インストール完了"
+                RESULTS+=("Gemini CLI: インストール完了")
             else
                 log_error "インストールに失敗しました。パスを確認してください"
-                RESULTS+=("Claude Code CLI: インストール失敗")
+                RESULTS+=("Gemini CLI: インストール失敗")
                 HAS_ERROR=true
             fi
         else
             log_warn "インストールをスキップしました"
-            RESULTS+=("Claude Code CLI: 未インストール (スキップ)")
+            RESULTS+=("Gemini CLI: 未インストール (スキップ)")
             HAS_ERROR=true
         fi
     else
         echo "  npm がインストールされていないため、先に Node.js をインストールしてください"
-        RESULTS+=("Claude Code CLI: 未インストール (npm必要)")
+        RESULTS+=("Gemini CLI: 未インストール (npm必要)")
         HAS_ERROR=true
     fi
 fi
@@ -284,7 +284,7 @@ language: ja
 # スキル設定
 skill:
   # スキル保存先（生成されたスキルはここに保存）
-  save_path: "~/.claude/skills/shogun-generated/"
+  save_path: "~/.gemini/skills/shogun-generated/"
 
   # ローカルスキル保存先（このプロジェクト専用）
   local_path: "~/multi-agent-shogun/skills/"
@@ -422,7 +422,7 @@ echo "  出陣（全エージェント起動）:"
 echo "     ./shutsujin_departure.sh"
 echo ""
 echo "  オプション:"
-echo "     ./shutsujin_departure.sh -s   # セットアップのみ（Claude手動起動）"
+echo "     ./shutsujin_departure.sh -s   # セットアップのみ（Gemini手動起動）"
 echo "     ./shutsujin_departure.sh -t   # Windows Terminalタブ展開"
 echo ""
 echo "  詳細は README.md を参照してください。"

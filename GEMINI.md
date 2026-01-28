@@ -4,7 +4,7 @@
 > **Last Updated**: 2026-01-27
 
 ## 概要
-multi-agent-shogunは、Claude Code + tmux を使ったマルチエージェント並列開発基盤である。
+multi-agent-shogunは、Gemini CLI + tmux を使ったマルチエージェント並列開発基盤である。
 戦国時代の軍制をモチーフとした階層構造で、複数のプロジェクトを並行管理できる。
 
 ## コンパクション復帰時（全エージェント必須）

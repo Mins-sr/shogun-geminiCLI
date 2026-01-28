@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "memory": {
+      "command": "env",
+      "args": [
+        "MEMORY_FILE_PATH=/Users/toma/project/shogun/memory/shogun_memory.jsonl",
+        "npx",
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ]
+    }
+  }
+}

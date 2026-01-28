@@ -4,7 +4,7 @@
 #
 # 使用方法:
 #   ./shutsujin_departure.sh           # 全エージェント起動（通常）
-#   ./shutsujin_departure.sh -s        # セットアップのみ（Claude起動なし）
+#   ./shutsujin_departure.sh -s        # セットアップのみ（Gemini起動なし）
 #   ./shutsujin_departure.sh -h        # ヘルプ表示
 
 set -e
@@ -37,6 +37,7 @@ log_war() {
 # ═══════════════════════════════════════════════════════════════════════════════
 SETUP_ONLY=false
 OPEN_TERMINAL=false
+ENABLE_WATCHDOG=false
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -48,6 +49,10 @@ while [[ $# -gt 0 ]]; do
             OPEN_TERMINAL=true
             shift
             ;;
+        -w|--watchdog)
+            ENABLE_WATCHDOG=true
+            shift
+            ;;
         -h|--help)
             echo ""
             echo "🏯 multi-agent-shogun 出陣スクリプト"
@@ -55,13 +60,15 @@ while [[ $# -gt 0 ]]; do
             echo "使用方法: ./shutsujin_departure.sh [オプション]"
             echo ""
             echo "オプション:"
-            echo "  -s, --setup-only  tmuxセッションのセットアップのみ（Claude起動なし）"
+            echo "  -s, --setup-only  tmuxセッションのセットアップのみ（Gemini起動なし）"
             echo "  -t, --terminal    Windows Terminal で新しいタブを開く"
+            echo "  -w, --watchdog    レート制限監視・自動リトライを有効化"
             echo "  -h, --help        このヘルプを表示"
             echo ""
             echo "例:"
             echo "  ./shutsujin_departure.sh      # 全エージェント起動（通常の出陣）"
-            echo "  ./shutsujin_departure.sh -s   # セットアップのみ（手動でClaude起動）"
+            echo "  ./shutsujin_departure.sh -s   # セットアップのみ（手動でGemini起動）"
+            echo "  ./shutsujin_departure.sh -w   # 全エージェント起動 + watchdog監視"
             echo "  ./shutsujin_departure.sh -t   # 全エージェント起動 + ターミナルタブ展開"
             echo ""
             echo "エイリアス:"
@@ -335,10 +342,11 @@ echo ""
 # STEP 6: Claude Code 起動（--setup-only でスキップ）
 # ═══════════════════════════════════════════════════════════════════════════════
 if [ "$SETUP_ONLY" = false ]; then
-    log_war "👑 全軍に Claude Code を召喚中..."
+    log_war "👑 全軍に Gemini CLI を召喚中..."
 
     # 将軍
-    tmux send-keys -t shogun "MAX_THINKING_TOKENS=0 claude --model opus --dangerously-skip-permissions"
+    # 将軍は確認プロンプトを表示（殿への報告・確認が必要なため）
+    tmux send-keys -t shogun "gemini"
     tmux send-keys -t shogun Enter
     log_info "  └─ 将軍、召喚完了"
 
@@ -347,12 +355,12 @@ if [ "$SETUP_ONLY" = false ]; then
 
     # 家老 + 足軽（9ペイン）
     for i in {0..8}; do
-        tmux send-keys -t "multiagent:0.$i" "claude --dangerously-skip-permissions"
+        tmux send-keys -t "multiagent:0.$i" "gemini --yolo"
         tmux send-keys -t "multiagent:0.$i" Enter
     done
     log_info "  └─ 家老・足軽、召喚完了"
 
-    log_success "✅ 全軍 Claude Code 起動完了"
+    log_success "✅ 全軍 Gemini CLI 起動完了"
     echo ""
 
     # ═══════════════════════════════════════════════════════════════════════════
@@ -426,7 +434,7 @@ NINJA_EOF
     echo -e "                               \033[0;36m[ASCII Art: syntax-samurai/ryu - CC0 1.0 Public Domain]\033[0m"
     echo ""
 
-    echo "  Claude Code の起動を待機中（15秒）..."
+    echo "  Gemini CLI の起動を待機中（15秒）..."
     sleep 15
 
     # 将軍に指示書を読み込ませる
@@ -495,17 +503,17 @@ echo "  ╚═══════════════════════
 echo ""
 
 if [ "$SETUP_ONLY" = true ]; then
-    echo "  ⚠️  セットアップのみモード: Claude Codeは未起動です"
+    echo "  ⚠️  セットアップのみモード: Gemini CLIは未起動です"
     echo ""
-    echo "  手動でClaude Codeを起動するには:"
+    echo "  手動でGemini CLIを起動するには:"
     echo "  ┌──────────────────────────────────────────────────────────┐"
-    echo "  │  # 将軍を召喚                                            │"
-    echo "  │  tmux send-keys -t shogun 'claude --dangerously-skip-permissions' Enter │"
+    echo "  │  # 将軍を召喚（YOLOモード）                               │"
+    echo "  │  tmux send-keys -t shogun 'gemini --yolo' Enter                  │"
     echo "  │                                                          │"
-    echo "  │  # 家老・足軽を一斉召喚                                   │"
+    echo "  │  # 家老・足軽を一斉召喚（YOLOモード）                      │"
     echo "  │  for i in {0..8}; do \\                                   │"
     echo "  │    tmux send-keys -t multiagent:0.\$i \\                   │"
-    echo "  │      'claude --dangerously-skip-permissions' Enter       │"
+    echo "  │      'gemini --yolo' Enter                               │"
     echo "  │  done                                                    │"
     echo "  └──────────────────────────────────────────────────────────┘"
     echo ""
@@ -541,5 +549,26 @@ if [ "$OPEN_TERMINAL" = true ]; then
     else
         log_info "  └─ wt.exe が見つかりません。手動でアタッチしてください。"
     fi
+    echo ""
+fi
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# STEP 9: Watchdog 起動（-w オプション時のみ）
+# ═══════════════════════════════════════════════════════════════════════════════
+if [ "$ENABLE_WATCHDOG" = true ]; then
+    log_info "🐕 Watchdog（レート制限監視）を起動中..."
+    
+    # watchdog.sh をバックグラウンドで起動
+    nohup "$SCRIPT_DIR/watchdog.sh" > "$SCRIPT_DIR/logs/watchdog.log" 2>&1 &
+    WATCHDOG_PID=$!
+    
+    log_success "  └─ Watchdog 起動完了 (PID: $WATCHDOG_PID)"
+    echo ""
+    echo "  ┌──────────────────────────────────────────────────────────┐"
+    echo "  │  🐕 Watchdog がバックグラウンドで監視中                   │"
+    echo "  │                                                          │"
+    echo "  │  停止方法: pkill -f 'watchdog.sh'                        │"
+    echo "  │  ログ確認: tail -f logs/watchdog.log                     │"
+    echo "  └──────────────────────────────────────────────────────────┘"
     echo ""
 fi
